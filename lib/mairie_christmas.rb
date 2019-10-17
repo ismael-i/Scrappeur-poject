@@ -1,14 +1,14 @@
-require 'nokogiri'
-require 'open-uri'
+require "nokogiri"
+require "open-uri"
+require "pry"
 
 # fonction de récuperation des email dans la page
 def get_townhall_email(url)
   document = Nokogiri::HTML(open(url))
-  
-  email = document.xpath('/html/body/div/main/section[2]/div/table/tbody/tr[4]/td[2]')
-  
-  return email.text
 
+  email = document.xpath("/html/body/div/main/section[2]/div/table/tbody/tr[4]/td[2]")
+
+  return email.text
 end
 
 # fonction pour de la récupération des liens
@@ -17,7 +17,7 @@ def get_townhall_links
 
   puts "Scraping..."
   links = link.xpath('/html/body/table//a[@class="lientxt"]')
-  
+
   return links
 end
 
@@ -27,19 +27,18 @@ def generate_town_email
   result_final = []
 
   # imposé des limites cause des caractére trop long
-  limit = 5 
+  limit = 5
   i = 0
-  
+
   #  tableau contenant les Hash contenant les données
   get_townhall_links.each do |link|
-
     if i > limit
       break
     end
 
     #  Hash contenant les données
     hash = Hash.new
-    hash[link.text] = get_townhall_email(link['href'].sub(/^./, base_url))
+    hash[link.text] = get_townhall_email(link["href"].sub(/^./, base_url))
     result_final << hash
 
     print "."
@@ -49,7 +48,20 @@ def generate_town_email
   puts ""
   puts "=== RESULT ==="
   return result_final
-
 end
 
+def save_as_JSON
+  myFile = File.open(File.expand_path("./../../bdd/input.json", __FILE__), "w+")
+  content = generate_town_email
+  temporaire_hash = {}
+  #puts "type  #{content[0].class}"
+  for index_content in 0...content.size
+    temporaire_hash = temporaire_hash.merge(content[index_content])
+  end
 
+  #myFile.write(temporaire_hash.to_json)
+  myFile.write(JSON.pretty_generate(temporaire_hash))
+  myFile.close
+end
+
+binding.pry
